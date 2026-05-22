@@ -33,10 +33,11 @@
 void usage(void)
 {
     printf("Desc: rpc methods call test\n");
-    printf("Usage: rpc <host> <port> <ssl type> <group_id>\n");
+    printf("Usage: rpc <host> <port> <ssl type> <group_id> [thread_count] [iterations]\n");
     printf("Example:\n");
     printf("   ./rpc 127.0.0.1 20200 ssl group0\n");
     printf("   ./rpc 127.0.0.1 20200 sm_ssl group0\n");
+    printf("   ./rpc 127.0.0.1 20200 sm_ssl group0 50 1000\n");
     exit(0);
 }
 struct bcos_sdk_c_endpoint
@@ -106,9 +107,10 @@ static std::shared_ptr<bcos::boostssl::ws::WsConfig> initWsConfig(
     }
     return wsConfig;
 }
-void* thread_function(std::shared_ptr<bcos_sdk_c_config> arg)
+void* thread_function(std::shared_ptr<bcos_sdk_c_config> arg, int iterations)
 {
-    while (1)
+    int count = 0;
+    while(iterations==0 || count<iterations)
     {
         auto factory = std::make_shared<bcos::cppsdk::SdkFactory>();
         auto wsConfig = initWsConfig(arg);
@@ -120,7 +122,9 @@ void* thread_function(std::shared_ptr<bcos_sdk_c_config> arg)
         usleep(100);
         sdk->stop();
         sdk.reset(nullptr);
+        count++;
     }
+    return nullptr;
 }
 std::shared_ptr<bcos_sdk_c_config> bcos_sdk_create_config(
     int sm_ssl, std::string host, uint16_t port)
@@ -167,11 +171,16 @@ int main(int argc, char** argv)
     int port = atoi(argv[2]);
     const char* type = argv[3];
     const char* group = argv[4];
+    int threadCount = (argc > 5) ? atoi(argv[5]) : 100;
+    int iterations = (argc > 6) ? atoi(argv[6]) : 0;
+    if (threadCount <= 0) { threadCount = 100; }
     printf(" [RPC] params ===>>>> \n");
     printf(" \t # host: %s\n", host);
     printf(" \t # port: %d\n", port);
     printf(" \t # type: %s\n", type);
     printf(" \t # group: %s\n", group);
+    printf(" \t # threads: %d\n", threadCount);
+    printf(" \t # iterations: %s\n", iterations > 0 ? std::to_string(iterations).c_str() : "infinite");
     int is_sm_ssl = 1;
     char const* pos = strstr(type, "sm_ssl");
     if (pos == NULL)
@@ -184,10 +193,10 @@ int main(int argc, char** argv)
     std::thread threads[100];
     int rc;
     long t;
-    for (t = 0; t < 100; t++)
+    for (t = 0; t < threadCount; t++)
     {
         printf("In main: creating thread %ld\n", t);
-        threads[t] = std::thread(thread_function, config);
+        threads[t] = std::thread(thread_function, config, iterations);
         //        rc = pthread_create(&threads[t], NULL, thread_function);
         //        if (rc)
         //        {
@@ -195,7 +204,7 @@ int main(int argc, char** argv)
         //            exit(-1);
         //        }
     }
-    for (t = 0; t < 100; t++)
+    for (t = 0; t < threadCount; t++)
     {
         threads[t].join();
     }
