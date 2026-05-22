@@ -31,6 +31,8 @@
 #include <cstdlib>
 #include <fstream>
 #include <set>
+#include <atomic>
+#include <csignal>
 
 using namespace bcos;
 using namespace bcos::cppsdk;
@@ -38,6 +40,17 @@ using namespace bcos::boostssl;
 using namespace bcos;
 //------------------------------------------------------------------------------
 //------------------------------------------------------------------------------
+
+std::atomic<bool> g_running{true};
+static std::shared_ptr<bcos::cppsdk::Sdk> g_sdk = nullptr;
+
+void signalHandler(int signum)
+{
+    std::cout << LOG_DESC(" [EventSub] Received signal ") << signum
+              << ", shutting down gracefully..." << std::endl;
+    g_running = false;
+    if (g_sdk) { g_sdk->stop(); }
+}
 
 void usage()
 {
@@ -81,6 +94,10 @@ int main(int argc, char** argv)
 
     std::cout << LOG_DESC(" [EventSub] start sdk ... ") << std::endl;
 
+    g_sdk = sdk;
+    signal(SIGINT, signalHandler);
+    signal(SIGTERM, signalHandler);
+
     // construct eventsub params
     auto params = std::make_shared<bcos::cppsdk::event::EventSubParams>();
     params->setFromBlock(from);
@@ -118,11 +135,13 @@ int main(int argc, char** argv)
             }
         });
 
-    while (true)
+    while (g_running)
     {
         std::cout << LOG_DESC(" Main thread running ") << std::endl;
         std::this_thread::sleep_for(std::chrono::milliseconds(10000));
     }
+
+    std::cout << LOG_DESC(" [EventSub] exited gracefully.") << std::endl;
 
     return EXIT_SUCCESS;
 }
