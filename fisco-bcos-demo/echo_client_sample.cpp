@@ -41,7 +41,12 @@ void usage()
 void sendMessage(NodeIPEndpoint const& _endPoint, std::shared_ptr<P2PMessage> _msg,
     std::shared_ptr<Service> _service, std::shared_ptr<RateLimiter> _rateLimiter)
 {
-    while (true)
+    if (!_service || !_msg)
+    {
+        BCOS_LOG(WARNING) << LOG_DESC("sendMessage: invalid service or message");
+        return;
+    }
+    while (_service->connected())
     {
         _rateLimiter->acquire(1, true);
         auto seq = _service->messageFactory()->newSeq();
@@ -107,5 +112,6 @@ int main(int argc, char** argv)
     msg->setPayload(std::make_shared<bytes>(randStr.begin(), randStr.end()));
     auto rateLimiter = std::make_shared<RateLimiter>(packetQPS);
     sendMessage(serverEndPoint, msg, service, rateLimiter);
+    gateway->stop();
     return EXIT_SUCCESS;
 }
