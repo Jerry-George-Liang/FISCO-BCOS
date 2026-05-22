@@ -45,6 +45,12 @@ int main(int argc, char** argv)
 
     long long count = std::stoul(argv[1]);
 
+    if (count <= 0)
+    {
+        std::cerr << "Error: count must be positive, got: " << count << std::endl;
+        usage();
+    }
+
     printf("[Random Gen Test] ===>>>> count: %lld\n", count);
 
     long long i = 0;
