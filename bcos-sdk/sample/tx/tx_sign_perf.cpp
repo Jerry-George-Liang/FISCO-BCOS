@@ -184,7 +184,8 @@ int main(int argc, char** argv)
     printf(
         " [Create Signed Tx Perf Test] total txs: %u, total elapsed(ms): %lld, avg(us): %lld, "
         "txs/s: %lld \n",
-        txCount, elapsedMS, elapsedUS / txCount, 1000 * txCount / elapsedMS);
+        (unsigned int)txCount, elapsedMS, elapsedUS / txCount,
+        (long long)(1000 * txCount / elapsedMS));
 
     return 0;
 }
