@@ -157,15 +157,15 @@ int main(int argc, char** argv)
     const char* chain_id = "chain0";
 
     std::string txHash = "";
-    uint32_t i = 0;
+    uint32_t signIndex = 0;
     uint32_t _10Per = txCount / 10;
 
     auto startPoint = std::chrono::high_resolution_clock::now();
-    while (i++ < txCount)
+    while (signIndex++ < txCount)
     {
-        if (i % _10Per == 0)
+        if (_10Per > 0 && signIndex % _10Per == 0)
         {
-            std::cerr << " ..process : " << ((double)i / txCount) * 100 << "%" << std::endl;
+            std::cerr << " ..process : " << ((double)signIndex / txCount) * 100 << "%" << std::endl;
         }
 
         auto txPair = transactionBuilder->createSignedTransaction(
