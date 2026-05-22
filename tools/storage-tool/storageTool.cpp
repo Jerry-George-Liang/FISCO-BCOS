@@ -25,6 +25,7 @@
 #include "bcos-tool/bcos-tool/BfsFileFactory.h"
 #include "bcos-utilities/BoostLogInitializer.h"
 #include "boost/filesystem.hpp"
+#include "boost/filesystem/fstream.hpp"
 #include "libinitializer/ProtocolInitializer.h"
 #include "libinitializer/StorageInitializer.h"
 #include "rocksdb/db.h"
