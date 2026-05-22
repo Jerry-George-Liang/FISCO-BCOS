@@ -42,7 +42,7 @@ std::string MODULE_NAME = "DEFAULT";
 
 void usage()
 {
-    std::cerr << "Usage: echo-server-sample <listenIP> <listenPort> <ssl>\n"
+    std::cerr << "Usage: echo-server-sample <listenIP> <listenPort> <ssl> [config_path]\n"
               << "Example:\n"
               << "    ./echo-server-sample 127.0.0.1 20200 true\n"
               << "    ./echo-server-sample 127.0.0.1 20200 false\n";
@@ -67,7 +67,7 @@ int main(int argc, char** argv)
         disableSsl = argv[3];
     }
     auto logInitializer = std::make_shared<BoostLogInitializer>();
-    std::string configFilePath = "config.ini";
+    std::string configFilePath = (argc > 4) ? argv[4] : "config.ini";
     boost::property_tree::ptree pt;
     boost::property_tree::read_ini(configFilePath, pt);
     logInitializer->initLog(pt);
