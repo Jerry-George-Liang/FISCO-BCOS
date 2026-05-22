@@ -32,6 +32,8 @@
 #include <memory>
 #include <set>
 #include <string>
+#include <atomic>
+#include <csignal>
 
 using namespace bcos;
 using namespace bcos::cppsdk;
@@ -39,6 +41,17 @@ using namespace bcos::boostssl;
 using namespace bcos;
 //------------------------------------------------------------------------------
 //------------------------------------------------------------------------------
+
+std::atomic<bool> g_running{true};
+static std::shared_ptr<bcos::cppsdk::Sdk> g_sdk = nullptr;
+
+void signalHandler(int signum)
+{
+    std::cout << LOG_DESC(" [BlockNotifier] Received signal ") << signum
+              << ", shutting down gracefully..." << std::endl;
+    g_running = false;
+    if (g_sdk) { g_sdk->stop(); }
+}
 
 void usage()
 {
@@ -72,17 +85,23 @@ int main(int argc, char** argv)
 
     std::cout << LOG_DESC(" [BlockNotifier] start sdk ... ") << std::endl;
 
+    g_sdk = sdk;
+    signal(SIGINT, signalHandler);
+    signal(SIGTERM, signalHandler);
+
     sdk->service()->registerBlockNumberNotifier(
         group, [](const std::string& _group, int64_t _blockNumber) {
             std::cout << " \t block notifier ===>>>> " << LOG_KV("group", _group)
                       << LOG_KV("blockNumber", _blockNumber) << std::endl;
         });
 
-    while (true)
+    while (g_running)
     {
         std::cout << LOG_DESC(" Main thread running ") << std::endl;
         std::this_thread::sleep_for(std::chrono::milliseconds(10000));
     }
+
+    std::cout << LOG_DESC(" [BlockNotifier] exited gracefully.") << std::endl;
 
     return EXIT_SUCCESS;
 }
