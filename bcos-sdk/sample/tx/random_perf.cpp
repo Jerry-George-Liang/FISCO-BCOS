@@ -55,6 +55,10 @@ int main(int argc, char** argv)
 
     long long i = 0;
     long long _10Per = count / 10;
+    if (_10Per == 0)
+    {
+        _10Per = 1;
+    }
 
     auto transactionBuilder = std::make_shared<bcos::cppsdk::utilities::TransactionBuilder>();
 
@@ -79,7 +83,7 @@ int main(int argc, char** argv)
     printf(
         " [Random Gen Test] total count: %lld, total elapsed(ms): %lld, "
         "count/s: %lld \n",
-        count, elapsedMS, 1000 * count / elapsedMS);
+        count, elapsedMS, (elapsedMS > 0) ? (1000 * count / elapsedMS) : 0);
 
     return 0;
 }
